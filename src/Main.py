@@ -43,10 +43,10 @@ def cal_units(total_cost, cost_list):
     # binary search
     while low <= high:
         mid = (low + high) // 2
-        units, energy_cost, vat, rebate, demand_charge, meter_rent, final_cost = cal_cost(mid, cost_list)
-        if abs(final_cost - total_cost) < 0.01:
-            return units, energy_cost, vat, rebate, demand_charge, meter_rent, final_cost
-        elif final_cost < total_cost:
+        units, energy_cost, vat, rebate, demand_charge, meter_rent, cal_total_cost = cal_cost(mid, cost_list)
+        if abs(cal_total_cost - total_cost) < 0.01:
+            return units, energy_cost, vat, rebate, demand_charge, meter_rent, cal_total_cost
+        elif cal_total_cost < total_cost:
             low = mid + 1
         else:
             high = mid - 1
@@ -65,9 +65,9 @@ def cal_cost(units, cost_list):
     rebate = energy_cost * 0.005
     demand_charge = 42
     meter_rent = 40
-    final_cost = energy_cost + vat - rebate + demand_charge + meter_rent
+    total_cost = energy_cost + vat - rebate + demand_charge + meter_rent
 
-    return units, energy_cost, vat, rebate, demand_charge, meter_rent, final_cost
+    return units, energy_cost, vat, rebate, demand_charge, meter_rent, total_cost
 
 
 def update_labels(event, tree, selection, value, increase_label):
@@ -80,35 +80,35 @@ def update_labels(event, tree, selection, value, increase_label):
     for row in tree.get_children():
         tree.delete(row)
 
-    old_units, energy_cost, vat, rebate, demand_charge, meter_rent, old_total_cost = 0, 0, 0, 0, 0, 0, 0
+    old_units, old_energy_cost, old_vat, old_rebate, old_demand_charge, old_meter_rent, old_total_cost = 0, 0, 0, 0, 0, 0, 0
     new_units, new_energy_cost, new_vat, new_rebate, new_demand_charge, new_meter_rent, new_total_cost = 0, 0, 0, 0, 0, 0, 0
 
     # perform operations according to user's selected option
     if selection == "Units":
-        old_units, energy_cost, vat, rebate, demand_charge, meter_rent, old_total_cost = cal_cost(float(value),
+        old_units, old_energy_cost, old_vat, old_rebate, old_demand_charge, old_meter_rent, old_total_cost = cal_cost(float(value),
                                                                                                   old_cost_list)
         new_units, new_energy_cost, new_vat, new_rebate, new_demand_charge, new_meter_rent, new_total_cost = cal_cost(
             float(value), new_cost_list)
     elif selection == "Old Total Cost":
-        old_units, energy_cost, vat, rebate, demand_charge, meter_rent, old_total_cost = cal_units(float(value),
+        old_units, old_energy_cost, old_vat, old_rebate, old_demand_charge, old_meter_rent, old_total_cost = cal_units(float(value),
                                                                                                    old_cost_list)
         new_units, new_energy_cost, new_vat, new_rebate, new_demand_charge, new_meter_rent, new_total_cost = cal_cost(
             old_units, new_cost_list)
     elif selection == "New Total Cost":
         new_units, new_energy_cost, new_vat, new_rebate, new_demand_charge, new_meter_rent, new_total_cost = cal_units(
             float(value), new_cost_list)
-        old_units, energy_cost, vat, rebate, demand_charge, meter_rent, old_total_cost = cal_cost(new_units,
+        old_units, old_energy_cost, old_vat, old_rebate, old_demand_charge, old_meter_rent, old_total_cost = cal_cost(new_units,
                                                                                                   old_cost_list)
 
     # Insert new data into the treeview
     tree.insert("", "end", values=["Units", f"{round(old_units, 2)} kWh", f"{round(new_units, 2)} kWh"])
-    tree.insert("", "end", values=["Energy Cost", f"+{round(energy_cost, 2)} tk", f"+{round(new_energy_cost, 2)} tk"])
-    tree.insert("", "end", values=["VAT", f"+{round(vat, 2)} tk", f"+{round(new_vat, 2)} tk"])
-    tree.insert("", "end", values=["Rebate", f"-{round(rebate, 2)} tk", f"+{round(new_rebate, 2)} tk"])
+    tree.insert("", "end", values=["Energy Cost", f"{round(old_energy_cost, 2)} tk", f"{round(new_energy_cost, 2)} tk"])
+    tree.insert("", "end", values=["VAT", f"{round(old_vat, 2)} tk", f"{round(new_vat, 2)} tk"])
+    tree.insert("", "end", values=["Rebate", f"{round(old_rebate, 2)} tk", f"{round(new_rebate, 2)} tk"])
     tree.insert("", "end",
-                values=["Demand Charge", f"+{round(demand_charge, 2)} tk", f"+{round(new_demand_charge, 2)} tk"])
-    tree.insert("", "end", values=["Meter Rent", f"+{round(meter_rent, 2)} tk", f"+{round(new_meter_rent, 2)} tk"])
-    tree.insert("", "end", values=["Total Cost", f"+{round(old_total_cost, 2)} tk", f"+{round(new_total_cost, 2)} tk"])
+                values=["Demand Charge", f"{round(old_demand_charge, 2)} tk", f"{round(new_demand_charge, 2)} tk"])
+    tree.insert("", "end", values=["Meter Rent", f"{round(old_meter_rent, 2)} tk", f"{round(new_meter_rent, 2)} tk"])
+    tree.insert("", "end", values=["Total Cost", f"{round(old_total_cost, 2)} tk", f"{round(new_total_cost, 2)} tk"])
 
     # Calculate and display increase percentage
     increase_percentage = ((new_total_cost - old_total_cost) / old_total_cost) * 100 if old_total_cost != 0 else 0
