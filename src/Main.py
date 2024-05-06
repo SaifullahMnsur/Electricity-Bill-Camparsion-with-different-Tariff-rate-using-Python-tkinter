@@ -70,16 +70,20 @@ def cal_cost(units, cost_list):
     return units, energy_cost, vat, rebate, demand_charge, meter_rent, total_cost
 
 
-def update_labels(event, tree, selection, value, increase_label):
+def update_labels( tree, selection, value, increase_label):
     # If any values is not given as input
     if not value or not value.replace('.', '').isdigit():
         messagebox.showwarning("Notice", 'Enter a valid input please')
         return
-
+    # if cost is given but it is less than 82 the minimum monthly charge
+    if ( selection == options[1] or selection == options[2] ) and float(value) <= 42.0:
+        messagebox.showwarning("Notice", 'Minimum charge 82tk!')
+        return
     # Clear previous data
     for row in tree.get_children():
         tree.delete(row)
 
+    # initialize used variables
     old_units, old_energy_cost, old_vat, old_rebate, old_demand_charge, old_meter_rent, old_total_cost = 0, 0, 0, 0, 0, 0, 0
     new_units, new_energy_cost, new_vat, new_rebate, new_demand_charge, new_meter_rent, new_total_cost = 0, 0, 0, 0, 0, 0, 0
 
@@ -105,8 +109,7 @@ def update_labels(event, tree, selection, value, increase_label):
     tree.insert("", "end", values=["Energy Cost", f"{round(old_energy_cost, 2)} tk", f"{round(new_energy_cost, 2)} tk"])
     tree.insert("", "end", values=["VAT", f"{round(old_vat, 2)} tk", f"{round(new_vat, 2)} tk"])
     tree.insert("", "end", values=["Rebate", f"{round(old_rebate, 2)} tk", f"{round(new_rebate, 2)} tk"])
-    tree.insert("", "end",
-                values=["Demand Charge", f"{round(old_demand_charge, 2)} tk", f"{round(new_demand_charge, 2)} tk"])
+    tree.insert("", "end", values=["Demand Charge", f"{round(old_demand_charge, 2)} tk", f"{round(new_demand_charge, 2)} tk"])
     tree.insert("", "end", values=["Meter Rent", f"{round(old_meter_rent, 2)} tk", f"{round(new_meter_rent, 2)} tk"])
     tree.insert("", "end", values=["Total Cost", f"{round(old_total_cost, 2)} tk", f"{round(new_total_cost, 2)} tk"])
 
@@ -116,13 +119,15 @@ def update_labels(event, tree, selection, value, increase_label):
 
 
 def on_entry_click(entry):
+    # Remove the text which is added as hint for input box
     if any(entry.get() == option_hint for option_hint in options_hint):
         entry.delete(0, tk.END)
         entry.insert(0, '')
         entry.config(fg='black')
 
 
-def on_focus_out(event, entry, selection):
+def on_focus_out(entry, selection):
+    # Add a hint when the input box (Entry) is out of focus
     if entry.get() == '' or any(entry.get() == option_hint for option_hint in options_hint):
         entry.delete(0, tk.END)
         if selection == options[0]:
@@ -135,8 +140,7 @@ def on_focus_out(event, entry, selection):
 
 
 def on_option_change(entry, selection):
-    # print("Option changed called!")
-    on_focus_out(None, entry, selection)
+    on_focus_out(entry, selection)
 
 
 def main():
@@ -153,7 +157,7 @@ def main():
     tree = ttk.Treeview(root, columns=columns, show="headings")
     increase_label = tk.Label(root, text="")
     button = tk.Button(root, text="Calculate",
-                       command=lambda: update_labels(None, tree, selection_var.get(), value_var.get(), increase_label))
+                       command=lambda: update_labels(tree, selection_var.get(), value_var.get(), increase_label))
 
     # Initialization part
     selection_var.set("Units")
@@ -164,8 +168,8 @@ def main():
 
     # Key binding part
     value_entry.bind('<FocusIn>', lambda event: on_entry_click(value_entry))
-    value_entry.bind('<FocusOut>', lambda event: on_focus_out(event, value_entry, selection_var.get()))
-    root.bind('<Return>', lambda event: update_labels(event, tree, selection_var.get(), value_var.get(), increase_label))
+    value_entry.bind('<FocusOut>', lambda event: on_focus_out(value_entry, selection_var.get()))
+    root.bind('<Return>', lambda event: update_labels(tree, selection_var.get(), value_var.get(), increase_label))
 
     # Packing part
     selection_menu.pack()
